@@ -86,6 +86,19 @@ MountainCarContinuous-v0:
   sde_sample_freq: 16
   policy_kwargs: "dict(log_std_init=0.0, ortho_init=False)"
 
+# Not Tuned
+ransim-v0:
+  # env_wrapper: utils.wrappers.PlotActionWrapper
+  #normalize: true
+  n_envs: 2
+  n_steps: 100
+  n_timesteps: 20000 #!!float 1e5
+  policy: 'MlpPolicy'
+  #ent_coef: 0.0
+  #use_sde: True
+  #sde_sample_freq: 16
+  #env_kwargs: "dict(t_final=200)"
+
 # Tuned
 BipedalWalker-v3:
   normalize: true

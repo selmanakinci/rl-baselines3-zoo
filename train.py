@@ -9,11 +9,14 @@ from pprint import pprint
 
 import yaml
 import gym
+import gym_ransim
 import seaborn
 import numpy as np
 import torch as th
 # For custom activation fn
 import torch.nn as nn  # noqa: F401 pytype: disable=unused-import
+
+import matplotlib.pyplot as plt
 
 from stable_baselines3.common.utils import set_random_seed
 # from stable_baselines3.common.cmd_util import make_atari_env
@@ -21,7 +24,9 @@ from stable_baselines3.common.vec_env import VecFrameStack, VecNormalize, DummyV
 from stable_baselines3.common.preprocessing import is_image_space
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.utils import constant_fn
-from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
+from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, CustomRansimCallback
+from stable_baselines3.common import results_plotter
+from stable_baselines3.common.results_plotter import load_results, ts2xy, plot_results
 
 # Register custom envs
 import utils.import_envs  # noqa: F401 pytype: disable=import-error
@@ -288,14 +293,23 @@ if __name__ == '__main__':  # noqa: C901
                 else:
                     normalize_kwargs = {'norm_reward': False}
 
-            if args.verbose > 0:
-                print("Creating test environment")
+            if env_id == 'ransim-v0':
 
-            save_vec_normalize = SaveVecNormalizeCallback(save_freq=1, save_path=params_path)
-            eval_callback = EvalCallback(create_env(1, eval_env=True), callback_on_new_best=save_vec_normalize,
-                                         best_model_save_path=save_path, n_eval_episodes=args.eval_episodes,
-                                         log_path=save_path, eval_freq=args.eval_freq,
-                                         deterministic=not is_atari)
+                eval_env_tmp = gym.make(env_id, t_final=1000)
+                eval_callback = CustomRansimCallback(eval_env_tmp, best_model_save_path=save_path,
+                                                       log_path=save_path, eval_freq=2500,
+                                                       n_eval_episodes=1,
+                                                       deterministic=True, render=False,
+                                                       plot_results=True)
+            else:
+                if args.verbose > 0:
+                    print("Creating test environment")
+
+                save_vec_normalize = SaveVecNormalizeCallback(save_freq=1, save_path=params_path)
+                eval_callback = EvalCallback(create_env(1, eval_env=True), callback_on_new_best=save_vec_normalize,
+                                             best_model_save_path=save_path, n_eval_episodes=args.eval_episodes,
+                                             log_path=save_path, eval_freq=args.eval_freq,
+                                             deterministic=not is_atari)
             callbacks.append(eval_callback)
 
             # Restore original kwargs
@@ -413,7 +427,7 @@ if __name__ == '__main__':  # noqa: C901
     print(f"Log path: {save_path}")
 
     try:
-        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, **kwargs)
+        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq,log_interval=10 , **kwargs)
     except KeyboardInterrupt:
         pass
 
@@ -431,3 +445,7 @@ if __name__ == '__main__':  # noqa: C901
         model.get_vec_normalize_env().save(os.path.join(params_path, 'vecnormalize.pkl'))
         # Deprecated saving:
         # env.save_running_average(params_path)
+
+    plot_results([save_path], n_timesteps, results_plotter.X_TIMESTEPS, "A2C ran-sim")
+    plt.savefig(save_path + 'A2C_ran-sim_rewards_plot.png', format="png")
+    plt.show()
