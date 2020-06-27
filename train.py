@@ -26,7 +26,7 @@ from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckA
 from stable_baselines3.common.utils import constant_fn
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, CustomRansimCallback
 from stable_baselines3.common import results_plotter
-from stable_baselines3.common.results_plotter import load_results, ts2xy, plot_results
+from stable_baselines3.common.results_plotter import load_results, ts2xy, plot_results, plot_evaluation_results
 
 # Register custom envs
 import utils.import_envs  # noqa: F401 pytype: disable=import-error
@@ -295,9 +295,9 @@ if __name__ == '__main__':  # noqa: C901
 
             if env_id == 'ransim-v0':
 
-                eval_env_tmp = gym.make(env_id, t_final=1000)
+                eval_env_tmp = gym.make(env_id, t_final=2000)
                 eval_callback = CustomRansimCallback(eval_env_tmp, best_model_save_path=save_path,
-                                                       log_path=save_path, eval_freq=2500,
+                                                       log_path=save_path, eval_freq=5000,
                                                        n_eval_episodes=1,
                                                        deterministic=True, render=False,
                                                        plot_results=True)
@@ -427,7 +427,7 @@ if __name__ == '__main__':  # noqa: C901
     print(f"Log path: {save_path}")
 
     try:
-        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq,log_interval=10 , **kwargs)
+        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, log_interval=5, **kwargs)
     except KeyboardInterrupt:
         pass
 
@@ -446,6 +446,15 @@ if __name__ == '__main__':  # noqa: C901
         # Deprecated saving:
         # env.save_running_average(params_path)
 
+    # plot training
     plot_results([save_path], n_timesteps, results_plotter.X_TIMESTEPS, "A2C ran-sim")
-    plt.savefig(save_path + 'A2C_ran-sim_rewards_plot.png', format="png")
+    plt.savefig(save_path + 'A2C_ransim_rewards_plot.png', format="png")
+    plt.show()
+
+ # plot evaluation
+    file_path = os.path.join(save_path, 'evaluations.npz')
+    #file_path = 'logs/a2c/ransim-v0_3/evaluations.npz'
+    # np.load(file_path)
+    plot_evaluation_results(file_path, n_timesteps, results_plotter.X_TIMESTEPS, "A2C_eval_ran-sim")
+    plt.savefig(save_path + 'A2C_ransim_rewards_eval_plot.png', format="png")
     plt.show()
