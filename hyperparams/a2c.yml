@@ -87,17 +87,60 @@ MountainCarContinuous-v0:
   policy_kwargs: "dict(log_std_init=0.0, ortho_init=False)"
 
 # Not Tuned
+# --------------------------
 ransim-v0:
   # env_wrapper: utils.wrappers.PlotActionWrapper
   #normalize: true
-  n_envs: 4
-  n_steps: 500
-  n_timesteps: 200000 #!!float 1e5
+  n_envs: 1
+  n_steps: 100 #100
+  n_timesteps: 100000 #!!float 1e5
   policy: 'MlpPolicy'
-  #ent_coef: 0.0
-  #use_sde: True
-  #sde_sample_freq: 16
-  #env_kwargs: "dict(t_final=200)"
+  ent_coef: 0.0
+#  use_sde: True
+  sde_sample_freq: 16
+#  env_kwargs: "dict(t_final=200)"
+# --------------------------
+#ransim-v0:
+#  n_envs: 1
+#  policy: 'MlpPolicy'
+#  n_timesteps: 100000
+#  gamma: 0.999
+#  normalize_advantage: True
+#  max_grad_norm: 5
+#  use_rms_prop: True
+#  gae_lambda: 0.99
+#  n_steps: 1000
+#  #lr_schedule: constant
+#  learning_rate: 0.15003251015359345
+#  ent_coef: 2.7067466603177066e-05
+#  vf_coef: 0.20021150651496789
+#  #log_std_init: 0.20964555936750617
+#  #ortho_init: False
+#  #net_arch: small
+#  #sde_net_arch: None
+#  #full_std: False
+#  #activation_fn: relu
+# --------------------------
+#ransim-v0:
+#  n_envs: 1
+#  n_steps: 100
+#  policy: 'MlpPolicy'
+#  n_timesteps: 20000
+##Number of finished trials:  30
+##Best trial:
+##Value:  55.79999923706055
+##Params:
+#  gamma: 0.99
+#  normalize_advantage: True
+#  max_grad_norm: 1
+#  use_rms_prop: True
+#  gae_lambda: 0.95
+##  lr_schedule: constant
+#  learning_rate: 0.4077422930722311
+#  ent_coef: 1.4107772864859497e-05
+#  vf_coef: 0.9014667522976627
+##Writing report to logs/a2c/report_ransim-v0_30-trials-20000-tpe-median_1593587830.csv
+# --------------------------
 
 # Tuned
 BipedalWalker-v3:

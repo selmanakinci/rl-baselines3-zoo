@@ -4,19 +4,17 @@ import os
 import importlib
 import time
 import uuid
+import warnings
 from collections import OrderedDict
 from pprint import pprint
 
 import yaml
 import gym
-import gym_ransim
 import seaborn
 import numpy as np
 import torch as th
 # For custom activation fn
 import torch.nn as nn  # noqa: F401 pytype: disable=unused-import
-
-import matplotlib.pyplot as plt
 
 from stable_baselines3.common.utils import set_random_seed
 # from stable_baselines3.common.cmd_util import make_atari_env
@@ -24,9 +22,7 @@ from stable_baselines3.common.vec_env import VecFrameStack, VecNormalize, DummyV
 from stable_baselines3.common.preprocessing import is_image_space
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.utils import constant_fn
-from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, CustomRansimCallback
-from stable_baselines3.common import results_plotter
-from stable_baselines3.common.results_plotter import load_results, ts2xy, plot_results, plot_evaluation_results
+from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 
 # Register custom envs
 import utils.import_envs  # noqa: F401 pytype: disable=import-error
@@ -74,6 +70,10 @@ if __name__ == '__main__':  # noqa: C901
                         type=int, default=10)
     parser.add_argument('--n-evaluations', help='Number of evaluations for hyperparameter optimization',
                         type=int, default=20)
+    parser.add_argument('--storage', help='Database storage path if distributed optimization should be used', type=str,
+                        default=None)
+    parser.add_argument('--study-name', help='Study name for distributed optimization', type=str,
+                        default=None)
     parser.add_argument('--verbose', help='Verbose mode (0: no output, 1: INFO)', default=1,
                         type=int)
     parser.add_argument('--gym-packages', type=str, nargs='+', default=[],
@@ -105,7 +105,7 @@ if __name__ == '__main__':  # noqa: C901
     uuid_str = f'_{uuid.uuid4()}' if args.uuid else ''
     if args.seed < 0:
         # Seed but with a random one
-        args.seed = np.random.randint(2**32 - 1)
+        args.seed = np.random.randint(2 ** 32 - 1)
 
     set_random_seed(args.seed)
 
@@ -225,35 +225,47 @@ if __name__ == '__main__':  # noqa: C901
         callbacks.append(CheckpointCallback(save_freq=args.save_freq,
                                             save_path=save_path, name_prefix='rl_model', verbose=1))
 
-    def create_env(n_envs, eval_env=False):
+
+    def create_env(n_envs, eval_env=False, no_log=False):
         """
         Create the environment and wrap it if necessary
         :param n_envs: (int)
         :param eval_env: (bool) Whether is it an environment used for evaluation or not
+        :param no_log: (bool) Do not log training when doing hyperparameter optim
+            (issue with writing the same file)
         :return: (Union[gym.Env, VecEnv])
         """
         global hyperparams
         global env_kwargs
 
         # Do not log eval env (issue with writing the same file)
-        log_dir = None if eval_env else save_path
+        log_dir = None if eval_env or no_log else save_path
 
         if n_envs == 1:
             env = DummyVecEnv([make_env(env_id, 0, args.seed,
-                               wrapper_class=env_wrapper, log_dir=log_dir,
-                               env_kwargs=env_kwargs)])
+                                        wrapper_class=env_wrapper, log_dir=log_dir,
+                                        env_kwargs=env_kwargs)])
         else:
             # env = SubprocVecEnv([make_env(env_id, i, args.seed) for i in range(n_envs)])
             # On most env, SubprocVecEnv does not help and is quite memory hungry
             env = DummyVecEnv([make_env(env_id, i, args.seed, log_dir=log_dir, env_kwargs=env_kwargs,
                                         wrapper_class=env_wrapper) for i in range(n_envs)])
         if normalize:
+            # Copy to avoid changing default values by reference
+            local_normalize_kwargs = normalize_kwargs.copy()
+            # Do not normalize reward for env used for evaluation
+            if eval_env:
+                if len(local_normalize_kwargs) > 0:
+                    local_normalize_kwargs['norm_reward'] = False
+                else:
+                    local_normalize_kwargs = {'norm_reward': False}
+
             if args.verbose > 0:
-                if len(normalize_kwargs) > 0:
-                    print(f"Normalization activated: {normalize_kwargs}")
+                if len(local_normalize_kwargs) > 0:
+                    print(f"Normalization activated: {local_normalize_kwargs}")
                 else:
                     print("Normalizing input and reward")
-            env = VecNormalize(env, **normalize_kwargs)
+            env = VecNormalize(env, **local_normalize_kwargs)
 
         # Optional Frame-stacking
         if hyperparams.get('frame_stack', False):
@@ -267,11 +279,12 @@ if __name__ == '__main__':  # noqa: C901
             env = VecTransposeImage(env)
         return env
 
+
     env = create_env(n_envs)
 
     # Create test env if needed, do not normalize reward
     eval_env = None
-    if args.eval_freq > 0:
+    if args.eval_freq > 0 and not args.optimize_hyperparameters:
         # Account for the number of parallel environments
         args.eval_freq = max(args.eval_freq // n_envs, 1)
 
@@ -284,38 +297,15 @@ if __name__ == '__main__':  # noqa: C901
                                          log_path=save_path, eval_freq=args.eval_freq)
             callbacks.append(eval_callback)
         else:
-            # Do not normalize the rewards of the eval env
-            old_kwargs = None
-            if normalize:
-                if len(normalize_kwargs) > 0:
-                    old_kwargs = normalize_kwargs.copy()
-                    normalize_kwargs['norm_reward'] = False
-                else:
-                    normalize_kwargs = {'norm_reward': False}
+            if args.verbose > 0:
+                print("Creating test environment")
 
-            if env_id == 'ransim-v0':
-
-
-                eval_env_tmp = gym.make(env_id, t_final=1000)
-                eval_callback = CustomRansimCallback(eval_env_tmp, best_model_save_path=save_path,
-                                                       log_path=save_path, eval_freq=10000,
-                                                       n_eval_episodes=1,
-                                                       deterministic=True, render=False,
-                                                       plot_results=True)
-            else:
-                if args.verbose > 0:
-                    print("Creating test environment")
-
-                save_vec_normalize = SaveVecNormalizeCallback(save_freq=1, save_path=params_path)
-                eval_callback = EvalCallback(create_env(1, eval_env=True), callback_on_new_best=save_vec_normalize,
-                                             best_model_save_path=save_path, n_eval_episodes=args.eval_episodes,
-                                             log_path=save_path, eval_freq=args.eval_freq,
-                                             deterministic=not is_atari)
+            save_vec_normalize = SaveVecNormalizeCallback(save_freq=1, save_path=params_path)
+            eval_callback = EvalCallback(create_env(1, eval_env=True), callback_on_new_best=save_vec_normalize,
+                                         best_model_save_path=save_path, n_eval_episodes=args.eval_episodes,
+                                         log_path=save_path, eval_freq=args.eval_freq,
+                                         deterministic=not is_atari)
             callbacks.append(eval_callback)
-
-            # Restore original kwargs
-            if old_kwargs is not None:
-                normalize_kwargs = old_kwargs.copy()
 
     # TODO: check for hyperparameters optimization
     # TODO: check What happens with the eval env when using frame stack
@@ -384,19 +374,25 @@ if __name__ == '__main__':  # noqa: C901
         if args.verbose > 0:
             print("Optimizing hyperparameters")
 
+        if args.storage is not None and args.study_name is None:
+            warnings.warn(f"You passed a remote storage: {args.storage} but no `--study-name`."
+                          "The study name will be generated by Optuna, make sure to re-use the same study name "
+                          "when you want to do distributed hyperparameter optimization.")
+
+
         def create_model(*_args, **kwargs):
             """
             Helper to create a model with different hyperparameters
             """
-            return ALGOS[args.algo](env=create_env(n_envs, eval_env=True), tensorboard_log=tensorboard_log,
+            return ALGOS[args.algo](env=create_env(n_envs, no_log=True), tensorboard_log=tensorboard_log,
                                     verbose=0, **kwargs)
+
 
         data_frame = hyperparam_optimization(args.algo, create_model, create_env, n_trials=args.n_trials,
                                              n_timesteps=n_timesteps, hyperparams=hyperparams,
                                              n_jobs=args.n_jobs, seed=args.seed,
                                              sampler_method=args.sampler, pruner_method=args.pruner,
-                                             n_startup_trials=args.n_startup_trials, n_evaluations=args.n_evaluations,
-                                             verbose=args.verbose)
+                                             n_startup_trials=args.n_startup_trials, n_evaluations=args.n_evaluations, verbose=args.verbose)
 
         report_name = "report_{}_{}-trials-{}-{}-{}_{}.csv".format(env_id, args.n_trials, n_timesteps,
                                                                    args.sampler, args.pruner, int(time.time()))
@@ -428,7 +424,7 @@ if __name__ == '__main__':  # noqa: C901
     print(f"Log path: {save_path}")
 
     try:
-        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, log_interval=10, **kwargs)
+        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, **kwargs)
     except KeyboardInterrupt:
         pass
 
@@ -446,16 +442,3 @@ if __name__ == '__main__':  # noqa: C901
         model.get_vec_normalize_env().save(os.path.join(params_path, 'vecnormalize.pkl'))
         # Deprecated saving:
         # env.save_running_average(params_path)
-
-    # plot training
-    plot_results([save_path], n_timesteps, results_plotter.X_TIMESTEPS, "A2C ran-sim")
-    plt.savefig(save_path + 'A2C_ransim_rewards_plot.png', format="png")
-    plt.show()
-
- # plot evaluation
-    file_path = os.path.join(save_path, 'evaluations.npz')
-    #file_path = 'logs/a2c/ransim-v0_3/evaluations.npz'
-    # np.load(file_path)
-    plot_evaluation_results(file_path, n_timesteps, results_plotter.X_TIMESTEPS, "A2C_eval_ran-sim")
-    plt.savefig(save_path + 'A2C_ransim_rewards_eval_plot.png', format="png")
-    plt.show()
