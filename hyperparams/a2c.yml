@@ -8,11 +8,6 @@ atari:
   ent_coef: 0.01
   vf_coef: 0.25
 
-CartPole-v1:
-  n_envs: 8
-  n_timesteps: !!float 5e5
-  policy: 'MlpPolicy'
-  ent_coef: 0.0
 
 LunarLander-v2:
   n_envs: 8
@@ -86,34 +81,41 @@ MountainCarContinuous-v0:
   sde_sample_freq: 16
   policy_kwargs: "dict(log_std_init=0.0, ortho_init=False)"
 
+CartPole-v1:
+  n_envs: 1 # 8
+  n_timesteps: !!float 5e5
+  policy: 'MlpPolicy'
+  #ent_coef: 0.0
+  n_steps: 500
+
 # Not Tuned
 # --------------------------
 ransim-v0:
-  # env_wrapper: utils.wrappers.PlotActionWrapper
-  #normalize: true
+#  env_wrapper: utils.wrappers.PlotActionWrapper
+  normalize: false
   n_envs: 1
-  n_steps: 100 #100
-  n_timesteps: 200000 #!!float 1e5
+  n_steps: 500 #100
+  n_timesteps: 30000 #!!float 1e5
   policy: 'MlpPolicy'
-  ent_coef: 0.0
+  ent_coef: 2.7067466603177066e-05
 #  use_sde: True
-  sde_sample_freq: 16
+#  sde_sample_freq: 16
   learning_rate: 0.007 # new by msa
 #  env_kwargs: "dict(t_final=200)"
 # --------------------------
 #ransim-v0:
 #  n_envs: 1
 #  policy: 'MlpPolicy'
-#  n_timesteps: 100000
+#  n_timesteps: 10000
 #  gamma: 0.999
-#  normalize_advantage: True
+#  normalize_advantage: False #True
 #  max_grad_norm: 5
 #  use_rms_prop: True
 #  gae_lambda: 0.99
-#  n_steps: 1000
+#  n_steps: 10
 #  #lr_schedule: constant
 #  learning_rate: 0.15003251015359345
-#  ent_coef: 2.7067466603177066e-05
+#  ent_coef: 0.1  #2.7067466603177066e-05
 #  vf_coef: 0.20021150651496789
 #  #log_std_init: 0.20964555936750617
 #  #ortho_init: False
