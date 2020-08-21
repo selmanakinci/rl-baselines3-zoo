@@ -90,6 +90,20 @@ CartPole-v1:
 
 # Not Tuned
 # --------------------------
+ransim-v1:
+#  env_wrapper: utils.wrappers.PlotActionWrapper
+  normalize: false
+  n_envs: 1
+  n_steps: 100
+  n_timesteps: 1000
+  #!!float 1e5
+  policy: 'MlpPolicy'
+  ent_coef: 2.7067466603177066e-05
+#  use_sde: True
+#  sde_sample_freq: 16
+  learning_rate: 0.007 # new by msa
+#  env_kwargs: "dict(t_final=200)"
+# --------------------------
 ransim-v0:
 #  env_wrapper: utils.wrappers.PlotActionWrapper
   normalize: false

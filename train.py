@@ -295,11 +295,10 @@ if __name__ == '__main__':  # noqa: C901
 
             if env_id == 'ransim-v0':
 
-
                 # eval_env_tmp = gym.make(env_id, t_final=5000)
-                eval_env_list = list( DummyVecEnv([lambda: gym.make(env_id, t_final=1000)]) for _ in range(4))
+                eval_env_list = list( DummyVecEnv([lambda: gym.make(env_id, t_final=500)]) for _ in range(4))
                 eval_callback = CustomRansimCallback(eval_env_list, best_model_save_path=save_path,
-                                                       log_path=save_path, eval_freq=1000,
+                                                       log_path=save_path, eval_freq=200,
                                                        n_eval_episodes=1,
                                                        deterministic=True, render=False,
                                                        plot_results=True)
@@ -429,7 +428,7 @@ if __name__ == '__main__':  # noqa: C901
     print(f"Log path: {save_path}")
 
     try:
-        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, log_interval=3, **kwargs)
+        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, log_interval=1, **kwargs)
     except KeyboardInterrupt:
         pass
 
