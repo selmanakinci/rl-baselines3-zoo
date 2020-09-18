@@ -58,7 +58,7 @@ LunarLanderContinuous-v2:
   policy: 'MlpPolicy'
   ent_coef: 0.0
   max_grad_norm: 0.5
-  n_steps: 8
+  n_steps: 1 #8
   gae_lambda: 0.9
   vf_coef: 0.4
   gamma: 0.99
@@ -82,11 +82,11 @@ MountainCarContinuous-v0:
   policy_kwargs: "dict(log_std_init=0.0, ortho_init=False)"
 
 CartPole-v1:
-  n_envs: 1 # 8
-  n_timesteps: !!float 5e5
+  n_envs: 4
+  n_timesteps: 20000 #!!float 5e5
   policy: 'MlpPolicy'
   #ent_coef: 0.0
-  n_steps: 500
+  n_steps: 10
 
 # Not Tuned
 # --------------------------
@@ -104,70 +104,35 @@ ransim-v1:
   learning_rate: 0.007 # new by msa
 #  env_kwargs: "dict(t_final=200)"
 # --------------------------
+#Number of finished trials:  10
+#Best trial:
+#Value:  -77.33145141601562
+#Params:
 ransim-v0:
-#  env_wrapper: utils.wrappers.PlotActionWrapper
-  normalize: false
-  n_envs: 1
-  n_steps: 500 #100
-  n_timesteps: 30000 #!!float 1e5
+  n_envs: 4
+  n_timesteps: 40000 #80000
+  gamma: 0.995
+  normalize_advantage: true #False
+  max_grad_norm: 0.3
+  use_rms_prop: False
+  gae_lambda: 0.8
+  n_steps: 20
+  learning_rate:  lin_0.0096 #lin_0.5141121815880177
+  ent_coef: 0.055709336801979537
+  vf_coef: 0.7408390311437715
   policy: 'MlpPolicy'
-  ent_coef: 2.7067466603177066e-05
-#  use_sde: True
-#  sde_sample_freq: 16
-  learning_rate: 0.007 # new by msa
-#  env_kwargs: "dict(t_final=200)"
+  policy_kwargs: "dict(log_std_init= -2.61506732878785, ortho_init= True, net_arch= [dict(pi=[256, 256], vf=[256, 256])], sde_net_arch= None, full_std= True, activation_fn=nn.Tanh)"
+#Writing report to logs/a2c/report_ransim-v0_10-trials-400-tpe-median_1598349770.csv
 # --------------------------
-#ransim-v0:
-#  n_envs: 1
-#  policy: 'MlpPolicy'
-#  n_timesteps: 10000
-#  gamma: 0.999
-#  normalize_advantage: False #True
-#  max_grad_norm: 5
-#  use_rms_prop: True
-#  gae_lambda: 0.99
-#  n_steps: 10
-#  #lr_schedule: constant
-#  learning_rate: 0.15003251015359345
-#  ent_coef: 0.1  #2.7067466603177066e-05
-#  vf_coef: 0.20021150651496789
-#  #log_std_init: 0.20964555936750617
-#  #ortho_init: False
-#  #net_arch: small
-#  #sde_net_arch: None
-#  #full_std: False
-#  #activation_fn: relu
-# --------------------------
-#ransim-v0:
-#  n_envs: 1
-#  n_steps: 100
-#  policy: 'MlpPolicy'
-#  n_timesteps: 20000
-##Number of finished trials:  30
-##Best trial:
-##Value:  55.79999923706055
-##Params:
-#  gamma: 0.99
-#  normalize_advantage: True
-#  max_grad_norm: 1
-#  use_rms_prop: True
-#  gae_lambda: 0.95
-##  lr_schedule: constant
-#  learning_rate: 0.4077422930722311
-#  ent_coef: 1.4107772864859497e-05
-#  vf_coef: 0.9014667522976627
-##Writing report to logs/a2c/report_ransim-v0_30-trials-20000-tpe-median_1593587830.csv
-# --------------------------
-
 # Tuned
 BipedalWalker-v3:
   normalize: true
-  n_envs: 16
+  n_envs: 2 #16
   n_timesteps: !!float 5e6
   policy: 'MlpPolicy'
   ent_coef: 0.0
   max_grad_norm: 0.5
-  n_steps: 8
+  n_steps: 2 #8
   gae_lambda: 0.9
   vf_coef: 0.4
   gamma: 0.99

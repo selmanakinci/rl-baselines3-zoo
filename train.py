@@ -73,7 +73,7 @@ if __name__ == '__main__':  # noqa: C901
     parser.add_argument('--n-startup-trials', help='Number of trials before using optuna sampler',
                         type=int, default=10)
     parser.add_argument('--n-evaluations', help='Number of evaluations for hyperparameter optimization',
-                        type=int, default=20)
+                        type=int, default=2)
     parser.add_argument('--verbose', help='Verbose mode (0: no output, 1: INFO)', default=1,
                         type=int)
     parser.add_argument('--gym-packages', type=str, nargs='+', default=[],
@@ -296,11 +296,11 @@ if __name__ == '__main__':  # noqa: C901
             if env_id == 'ransim-v0':
 
                 # eval_env_tmp = gym.make(env_id, t_final=5000)
-                eval_env_list = list( DummyVecEnv([lambda: gym.make(env_id, t_final=500)]) for _ in range(4))
+                eval_env_list = list( DummyVecEnv([lambda: gym.make(env_id, t_final=2000)]) for _ in range(4))
                 eval_callback = CustomRansimCallback(eval_env_list, best_model_save_path=save_path,
-                                                       log_path=save_path, eval_freq=200,
+                                                       log_path=save_path, eval_freq=1000,
                                                        n_eval_episodes=1,
-                                                       deterministic=True, render=False,
+                                                       deterministic=False, render=False,
                                                        plot_results=True)
             else:
                 if args.verbose > 0:
@@ -428,7 +428,7 @@ if __name__ == '__main__':  # noqa: C901
     print(f"Log path: {save_path}")
 
     try:
-        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, log_interval=1, **kwargs)
+        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, log_interval=25, **kwargs)
     except KeyboardInterrupt:
         pass
 

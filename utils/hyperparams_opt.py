@@ -13,7 +13,7 @@ from utils import linear_schedule
 
 def hyperparam_optimization(algo, model_fn, env_fn, n_trials=10, n_timesteps=5000, hyperparams=None,
                             n_jobs=1, sampler_method='random', pruner_method='halving',
-                            n_startup_trials=10, n_evaluations=20, n_eval_episodes=5, seed=0, verbose=1):
+                            n_startup_trials=10, n_evaluations=20, n_eval_episodes=1, seed=0, verbose=1):
     """
     :param algo: (str)
     :param model_fn: (func) function that is used to instantiate the model
@@ -195,67 +195,6 @@ def sample_ppo_params(trial):
     }
 
 
-# def sample_a2c_params(trial):
-#     """
-#     Sampler for A2C hyperparams.
-#
-#     :param trial: (optuna.trial)
-#     :return: (dict)
-#     """
-#     gamma = trial.suggest_categorical('gamma', [0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 0.9999])
-#     normalize_advantage = trial.suggest_categorical('normalize_advantage', [False, True])
-#     max_grad_norm = trial.suggest_categorical('max_grad_norm', [0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 5])
-#     use_rms_prop = trial.suggest_categorical('use_rms_prop', [False, True])
-#     gae_lambda = trial.suggest_categorical('gae_lambda', [0.8, 0.9, 0.92, 0.95, 0.98, 0.99, 1.0])
-#     n_steps = trial.suggest_categorical('n_steps', [8, 16, 32, 64, 128, 256, 512, 1024, 2048])
-#     lr_schedule = trial.suggest_categorical('lr_schedule', ['linear', 'constant'])
-#     learning_rate = trial.suggest_loguniform('lr', 1e-5, 1)
-#     ent_coef = trial.suggest_loguniform('ent_coef', 0.00000001, 0.1)
-#     vf_coef = trial.suggest_uniform('vf_coef', 0, 1)
-#     log_std_init = trial.suggest_uniform('log_std_init', -4, 1)
-#     ortho_init = trial.suggest_categorical('ortho_init', [False, True])
-#     net_arch = trial.suggest_categorical('net_arch', ['small', 'medium'])
-#     sde_net_arch = trial.suggest_categorical('sde_net_arch', [None, 'tiny', 'small'])
-#     full_std = trial.suggest_categorical('full_std', [False, True])
-#     # activation_fn = trial.suggest_categorical('activation_fn', ['tanh', 'relu', 'elu', 'leaky_relu'])
-#     activation_fn = trial.suggest_categorical('activation_fn', ['tanh', 'relu'])
-#
-#     if lr_schedule == 'linear':
-#         learning_rate = linear_schedule(learning_rate)
-#
-#     net_arch = {
-#         'small': [dict(pi=[64, 64], vf=[64, 64])],
-#         'medium': [dict(pi=[256, 256], vf=[256, 256])],
-#     }[net_arch]
-#
-#     sde_net_arch = {
-#         None: None,
-#         'tiny': [64],
-#         'small': [64, 64],
-#     }[sde_net_arch]
-#
-#     activation_fn = {
-#         'tanh': nn.Tanh,
-#         'relu': nn.ReLU,
-#         'elu': nn.ELU,
-#         'leaky_relu': nn.LeakyReLU
-#     }[activation_fn]
-#
-#     return {
-#         'n_steps': n_steps,
-#         'gamma': gamma,
-#         'gae_lambda': gae_lambda,
-#         'learning_rate': learning_rate,
-#         'ent_coef': ent_coef,
-#         'normalize_advantage': normalize_advantage,
-#         'max_grad_norm': max_grad_norm,
-#         'use_rms_prop': use_rms_prop,
-#         'vf_coef': vf_coef,
-#         'policy_kwargs': dict(log_std_init=log_std_init, net_arch=net_arch, full_std=full_std,
-#                               activation_fn=activation_fn, sde_net_arch=sde_net_arch,
-#                               ortho_init=ortho_init)
-#     }
-
 def sample_a2c_params(trial):
     """
     Sampler for A2C hyperparams.
@@ -268,42 +207,42 @@ def sample_a2c_params(trial):
     max_grad_norm = trial.suggest_categorical('max_grad_norm', [0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 5])
     use_rms_prop = trial.suggest_categorical('use_rms_prop', [False, True])
     gae_lambda = trial.suggest_categorical('gae_lambda', [0.8, 0.9, 0.92, 0.95, 0.98, 0.99, 1.0])
-    #n_steps = trial.suggest_categorical('n_steps', [8, 16, 32, 64, 128, 256, 512, 1024, 2048])
+    n_steps = trial.suggest_categorical('n_steps', [10,100])#n_steps = trial.suggest_categorical('n_steps', [8, 16, 32, 64, 128, 256, 512, 1024, 2048])
     lr_schedule = trial.suggest_categorical('lr_schedule', ['linear', 'constant'])
-    learning_rate = trial.suggest_loguniform('learning_rate', 1e-5, 1)
+    learning_rate = trial.suggest_loguniform('lr', 1e-5, 1)
     ent_coef = trial.suggest_loguniform('ent_coef', 0.00000001, 0.1)
     vf_coef = trial.suggest_uniform('vf_coef', 0, 1)
-    #log_std_init = trial.suggest_uniform('log_std_init', -4, 1)
-    #ortho_init = trial.suggest_categorical('ortho_init', [False, True])
-    #net_arch = trial.suggest_categorical('net_arch', ['small', 'medium'])
-    #sde_net_arch = trial.suggest_categorical('sde_net_arch', [None, 'tiny', 'small'])
-    #full_std = trial.suggest_categorical('full_std', [False, True])
+    log_std_init = trial.suggest_uniform('log_std_init', -4, 1)
+    ortho_init = trial.suggest_categorical('ortho_init', [False, True])
+    net_arch = trial.suggest_categorical('net_arch', ['small', 'medium'])
+    sde_net_arch = trial.suggest_categorical('sde_net_arch', [None, 'tiny', 'small'])
+    full_std = trial.suggest_categorical('full_std', [False, True])
     # activation_fn = trial.suggest_categorical('activation_fn', ['tanh', 'relu', 'elu', 'leaky_relu'])
-    #activation_fn = trial.suggest_categorical('activation_fn', ['tanh', 'relu'])
+    activation_fn = trial.suggest_categorical('activation_fn', ['tanh', 'relu'])
 
     if lr_schedule == 'linear':
         learning_rate = linear_schedule(learning_rate)
 
-    # net_arch = {
-    #     'small': [dict(pi=[64, 64], vf=[64, 64])],
-    #     'medium': [dict(pi=[256, 256], vf=[256, 256])],
-    # }[net_arch]
+    net_arch = {
+        'small': [dict(pi=[64, 64], vf=[64, 64])],
+        'medium': [dict(pi=[256, 256], vf=[256, 256])],
+    }[net_arch]
 
-    # sde_net_arch = {
-    #     None: None,
-    #     'tiny': [64],
-    #     'small': [64, 64],
-    # }[sde_net_arch]
-    #
-    # activation_fn = {
-    #     'tanh': nn.Tanh,
-    #     'relu': nn.ReLU,
-    #     'elu': nn.ELU,
-    #     'leaky_relu': nn.LeakyReLU
-    # }[activation_fn]
+    sde_net_arch = {
+        None: None,
+        'tiny': [64],
+        'small': [64, 64],
+    }[sde_net_arch]
+
+    activation_fn = {
+        'tanh': nn.Tanh,
+        'relu': nn.ReLU,
+        'elu': nn.ELU,
+        'leaky_relu': nn.LeakyReLU
+    }[activation_fn]
 
     return {
-        #'n_steps': n_steps,
+        'n_steps': n_steps,
         'gamma': gamma,
         'gae_lambda': gae_lambda,
         'learning_rate': learning_rate,
@@ -312,10 +251,72 @@ def sample_a2c_params(trial):
         'max_grad_norm': max_grad_norm,
         'use_rms_prop': use_rms_prop,
         'vf_coef': vf_coef,
-        # 'policy_kwargs': dict(log_std_init=log_std_init, net_arch=net_arch, full_std=full_std,
-        #                       activation_fn=activation_fn, sde_net_arch=sde_net_arch,
-        #                       ortho_init=ortho_init)
+        'policy_kwargs': dict(log_std_init=log_std_init, net_arch=net_arch, full_std=full_std,
+                              activation_fn=activation_fn, sde_net_arch=sde_net_arch,
+                              ortho_init=ortho_init)
     }
+
+## Below is changed by msa before 2020-07
+# def sample_a2c_params(trial):
+#     """
+#     Sampler for A2C hyperparams.
+#
+#     :param trial: (optuna.trial)
+#     :return: (dict)
+#     """
+#     gamma = trial.suggest_categorical('gamma', [0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 0.9999])
+#     normalize_advantage = trial.suggest_categorical('normalize_advantage', [False, True])
+#     max_grad_norm = trial.suggest_categorical('max_grad_norm', [0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 5])
+#     use_rms_prop = trial.suggest_categorical('use_rms_prop', [False, True])
+#     gae_lambda = trial.suggest_categorical('gae_lambda', [0.8, 0.9, 0.92, 0.95, 0.98, 0.99, 1.0])
+#     #n_steps = trial.suggest_categorical('n_steps', [8, 16, 32, 64, 128, 256, 512, 1024, 2048])
+#     lr_schedule = trial.suggest_categorical('lr_schedule', ['linear', 'constant'])
+#     learning_rate = trial.suggest_loguniform('learning_rate', 1e-5, 1)
+#     ent_coef = trial.suggest_loguniform('ent_coef', 0.00000001, 0.1)
+#     vf_coef = trial.suggest_uniform('vf_coef', 0, 1)
+#     #log_std_init = trial.suggest_uniform('log_std_init', -4, 1)
+#     #ortho_init = trial.suggest_categorical('ortho_init', [False, True])
+#     #net_arch = trial.suggest_categorical('net_arch', ['small', 'medium'])
+#     #sde_net_arch = trial.suggest_categorical('sde_net_arch', [None, 'tiny', 'small'])
+#     #full_std = trial.suggest_categorical('full_std', [False, True])
+#     # activation_fn = trial.suggest_categorical('activation_fn', ['tanh', 'relu', 'elu', 'leaky_relu'])
+#     #activation_fn = trial.suggest_categorical('activation_fn', ['tanh', 'relu'])
+#
+#     if lr_schedule == 'linear':
+#         learning_rate = linear_schedule(learning_rate)
+#
+#     # net_arch = {
+#     #     'small': [dict(pi=[64, 64], vf=[64, 64])],
+#     #     'medium': [dict(pi=[256, 256], vf=[256, 256])],
+#     # }[net_arch]
+#
+#     # sde_net_arch = {
+#     #     None: None,
+#     #     'tiny': [64],
+#     #     'small': [64, 64],
+#     # }[sde_net_arch]
+#     #
+#     # activation_fn = {
+#     #     'tanh': nn.Tanh,
+#     #     'relu': nn.ReLU,
+#     #     'elu': nn.ELU,
+#     #     'leaky_relu': nn.LeakyReLU
+#     # }[activation_fn]
+#
+#     return {
+#         #'n_steps': n_steps,
+#         'gamma': gamma,
+#         'gae_lambda': gae_lambda,
+#         'learning_rate': learning_rate,
+#         'ent_coef': ent_coef,
+#         'normalize_advantage': normalize_advantage,
+#         'max_grad_norm': max_grad_norm,
+#         'use_rms_prop': use_rms_prop,
+#         'vf_coef': vf_coef,
+#         # 'policy_kwargs': dict(log_std_init=log_std_init, net_arch=net_arch, full_std=full_std,
+#         #                       activation_fn=activation_fn, sde_net_arch=sde_net_arch,
+#         #                       ortho_init=ortho_init)
+#     }
 
 
 def sample_sac_params(trial):
