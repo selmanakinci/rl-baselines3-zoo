@@ -109,8 +109,8 @@ ransim-v1:
 #Value:  -77.33145141601562
 #Params:
 ransim-v0:
-  n_envs: 4
-  n_timesteps: 40000 #80000
+  n_envs: 1
+  n_timesteps: 1000 #80000
   gamma: 0.995
   normalize_advantage: true #False
   max_grad_norm: 0.3
