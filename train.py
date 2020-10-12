@@ -428,7 +428,7 @@ if __name__ == '__main__':  # noqa: C901
     print(f"Log path: {save_path}")
 
     try:
-        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, log_interval=5, **kwargs)
+        model.learn(n_timesteps, eval_log_path=save_path, eval_env=eval_env, eval_freq=args.eval_freq, log_interval=20, **kwargs)
     except KeyboardInterrupt:
         pass
 

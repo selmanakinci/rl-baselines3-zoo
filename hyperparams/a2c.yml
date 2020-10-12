@@ -110,13 +110,13 @@ ransim-v1:
 #Params:
 ransim-v0:
   n_envs: 1
-  n_timesteps: 1000 #80000
+  n_timesteps: 2000 #80000
   gamma: 0.995
   normalize_advantage: true #False
   max_grad_norm: 0.3
   use_rms_prop: False
   gae_lambda: 0.8
-  n_steps: 20
+  n_steps: 5
   learning_rate:  lin_0.0096 #lin_0.5141121815880177
   ent_coef: 0.055709336801979537
   vf_coef: 0.7408390311437715
