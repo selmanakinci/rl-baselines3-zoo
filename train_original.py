@@ -15,6 +15,7 @@ import numpy as np
 import torch as th
 # For custom activation fn
 import torch.nn as nn  # noqa: F401 pytype: disable=unused-import
+import matplotlib.pyplot as plt
 
 from stable_baselines3.common.utils import set_random_seed
 # from stable_baselines3.common.cmd_util import make_atari_env
@@ -23,6 +24,8 @@ from stable_baselines3.common.preprocessing import is_image_space
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.utils import constant_fn
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
+from stable_baselines3.common import results_plotter
+from stable_baselines3.common.results_plotter import load_results, ts2xy, plot_results, plot_evaluation_results
 
 # Register custom envs
 import utils.import_envs  # noqa: F401 pytype: disable=import-error
@@ -442,3 +445,8 @@ if __name__ == '__main__':  # noqa: C901
         model.get_vec_normalize_env().save(os.path.join(params_path, 'vecnormalize.pkl'))
         # Deprecated saving:
         # env.save_running_average(params_path)
+
+    # plot training
+    plot_results([save_path], n_timesteps, results_plotter.X_TIMESTEPS, "A2C ran-sim")
+    plt.savefig(save_path + 'A2C_ransim_rewards_plot.png', format="png")
+    plt.show()

@@ -109,14 +109,14 @@ ransim-v1:
 #Value:  -77.33145141601562
 #Params:
 ransim-v0:
-  n_envs: 1
-  n_timesteps: 2000 #80000
+  n_envs: 4
+  n_timesteps: 8000 #80000
   gamma: 0.995
   normalize_advantage: true #False
   max_grad_norm: 0.3
   use_rms_prop: False
   gae_lambda: 0.8
-  n_steps: 5
+  n_steps: 20
   learning_rate:  lin_0.0096 #lin_0.5141121815880177
   ent_coef: 0.055709336801979537
   vf_coef: 0.7408390311437715
@@ -128,7 +128,7 @@ ransim-v0:
 BipedalWalker-v3:
   normalize: true
   n_envs: 2 #16
-  n_timesteps: !!float 5e6
+  n_timesteps: 200000 #!!float 5e6
   policy: 'MlpPolicy'
   ent_coef: 0.0
   max_grad_norm: 0.5
